@@ -1,0 +1,14 @@
+// 字符串转整数
+function stringToInt(s) {
+    var result = 0
+    for (var i = 0; i < s.length(); ++i) {
+        var d = s.codeAt(i) - '0'.codeAt(0)
+        result = result * 10 + d
+    }
+    return result
+}
+
+println(stringToInt('0'))
+println(stringToInt('2'))
+println(stringToInt('123'))
+println(stringToInt('32453532'))

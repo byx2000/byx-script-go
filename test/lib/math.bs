@@ -1,0 +1,53 @@
+var Math = {
+    max(a, b) {
+        if (a > b) {
+            return a
+        }
+        return b
+    },
+    min(a, b) {
+        if (a < b) {
+            return a
+        }
+        return b
+    },
+    abs(x) {
+        if (x < 0) {
+            return -x
+        }
+        return x
+    },
+    sin(x) {
+        return sin(x * 1.0)
+    },
+    cos(x) {
+        return cos(x * 1.0)
+    },
+    tan(x) {
+        return tan(x * 1.0)
+    },
+    pow(x, n) {
+        return pow(x * 1.0, n * 1.0)
+    },
+    exp(x) {
+        return exp(x * 1.0)
+    },
+    ln(x) {
+        return ln(x * 1.0)
+    },
+    log10(x) {
+        return log10(x * 1.0)
+    },
+    sqrt(x) {
+        return sqrt(x * 1.0)
+    },
+    round(x) {
+        return round(x * 1.0)
+    },
+    ceil(x) {
+        return ceil(x * 1.0)
+    },
+    floor(x) {
+        return floor(x * 1.0)
+    }
+}
