@@ -6,167 +6,179 @@ import (
 	"fmt"
 )
 
+// ParseResult 解析结果
 type ParseResult struct {
-	Result any
-	Remain Input
+	Result any   // 结果
+	Remain Input // 剩余输入
 }
 
-type ParseFunc []func(Input) (ParseResult, error)
+// ParseFunc 解析函数
+type ParseFunc func(Input) (ParseResult, error)
 
+// Parser 解析器
 type Parser struct {
 	parse ParseFunc
 }
 
-func Fail() Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
-		return ParseResult{}, errors.New("no error message")
-	}}}
+func parseError(input Input, msg string) error {
+	return errors.New(fmt.Sprintf("parse error at row %d, col %d: %s", input.Row(), input.Col(), msg))
 }
 
-func Any() Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
+// Fail 直接失败
+func Fail() *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
+		return ParseResult{}, parseError(input, "no error message")
+	}}
+}
+
+// Any 匹配任意字符
+func Any() *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
 		if input.End() {
-			return ParseResult{}, errors.New("unexpected end of file")
+			return ParseResult{}, parseError(input, "unexpected end of input")
 		}
 		c := input.Current()
 		return ParseResult{c, input.Next()}, nil
-	}}}
+	}}
 }
 
-func Chs(chs ...rune) Parser {
+// Ch 匹配指定字符
+func Ch(c rune) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
+		if input.End() {
+			return ParseResult{}, parseError(input, "unexpected end of input")
+		}
+		ch := input.Current()
+		if c != ch {
+			return ParseResult{}, parseError(input, fmt.Sprintf("expected %c", c))
+		}
+		return ParseResult{c, input.Next()}, nil
+	}}
+}
+
+// Chs 匹配字符集
+func Chs(chs ...rune) *Parser {
 	set := make(map[rune]bool)
 	for _, c := range chs {
 		set[c] = true
 	}
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
+	return &Parser{func(input Input) (ParseResult, error) {
 		if input.End() {
-			return ParseResult{}, errors.New("unexpected end of file")
+			return ParseResult{}, parseError(input, "unexpected end of input")
 		}
 		c := input.Current()
 		_, exist := set[c]
 		if !exist {
-			msg := fmt.Sprintf("at row %d, col %d: expected character in %v but met %c", input.Row(), input.Col(), chs, c)
-			return ParseResult{}, errors.New(msg)
+			return ParseResult{}, parseError(input, fmt.Sprintf("unexpected %c", c))
 		}
 		return ParseResult{c, input.Next()}, nil
-	}}}
+	}}
 }
 
-func Ch(c rune) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
+// Not 匹配不等于指定字符的字符
+func Not(c rune) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
 		if input.End() {
-			return ParseResult{}, errors.New("unexpected end of file")
-		}
-		ch := input.Current()
-		if c != ch {
-			msg := fmt.Sprintf("at row %d, col %d: expected %c", input.Row(), input.Col(), c)
-			return ParseResult{}, errors.New(msg)
-		}
-		return ParseResult{c, input.Next()}, nil
-	}}}
-}
-
-func Not(c rune) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
-		if input.End() {
-			return ParseResult{}, errors.New("unexpected end of file")
+			return ParseResult{}, parseError(input, "unexpected end of input")
 		}
 		ch := input.Current()
 		if c == ch {
-			msg := fmt.Sprintf("at row %d, col %d: unexpected character %c", input.Row(), input.Col(), ch)
-			return ParseResult{}, errors.New(msg)
+			return ParseResult{}, parseError(input, fmt.Sprintf("unexpected %c", ch))
 		}
 		return ParseResult{ch, input.Next()}, nil
-	}}}
+	}}
 }
 
-func Range(c1 rune, c2 rune) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
+// Range 匹配指定范围内的字符
+func Range(c1 rune, c2 rune) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
 		if input.End() {
-			return ParseResult{}, errors.New("unexpected end of file")
+			return ParseResult{}, parseError(input, "unexpected end of input")
 		}
 		c := input.Current()
 		if (c-c1)*(c-c2) > 0 {
-			msg := fmt.Sprintf("index at %d: expected character in range (%c, %c) but met %c", input.index, c1, c2, c)
-			return ParseResult{}, errors.New(msg)
+			return ParseResult{}, parseError(input, fmt.Sprintf("unexpected %c", c))
 		}
 		return ParseResult{c, input.Next()}, nil
-	}}}
+	}}
 }
 
-func String(s string) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
+// String 匹配字符串前缀
+func String(s string) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
 		i := input
 		for _, c := range s {
 			if i.End() {
-				return ParseResult{}, errors.New("unexpected end of file")
+				return ParseResult{}, parseError(input, "unexpected end of input")
 			}
 			if i.Current() != c {
-				msg := fmt.Sprintf("at row %d, col %d: expected %s", input.row, input.col, s)
-				return ParseResult{}, errors.New(msg)
+				return ParseResult{}, parseError(input, fmt.Sprintf("expected %s", s))
 			}
 			i = i.Next()
 		}
 		return ParseResult{s, i}, nil
-	}}}
+	}}
 }
 
-func Map(p Parser, mapper func(any) any) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
-		r, err := p.parse[0](input)
+// Map 转换解析结果
+func Map(p *Parser, mapper func(any) any) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
+		r, err := p.parse(input)
 		if err != nil {
 			return ParseResult{}, err
 		}
 		return ParseResult{mapper(r.Result), r.Remain}, nil
-	}}}
+	}}
 }
 
-func And(lhs Parser, rhs Parser) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
-		r1, err := lhs.parse[0](input)
+// And 连接两个解析器
+func And(lhs *Parser, rhs *Parser) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
+		r1, err := lhs.parse(input)
 		if err != nil {
 			return ParseResult{}, err
 		}
-		r2, err := rhs.parse[0](r1.Remain)
+		r2, err := rhs.parse(r1.Remain)
 		if err != nil {
 			return ParseResult{}, err
 		}
 		return ParseResult{Pair{r1.Result, r2.Result}, r2.Remain}, nil
-	}}}
-}
-
-func Seq(parsers ...Parser) Parser {
-	return Parser{ParseFunc{
-		func(input Input) (ParseResult, error) {
-			rs := make([]any, 0)
-			for _, p := range parsers {
-				r, err := p.parse[0](input)
-				if err != nil {
-					return ParseResult{}, err
-				}
-				rs = append(rs, r.Result)
-				input = r.Remain
-			}
-			return ParseResult{rs, input}, nil
-		},
 	}}
 }
 
-func Or(lhs Parser, rhs Parser) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
-		r, err := lhs.parse[0](input)
+// Seq 连接多个解析器
+func Seq(parsers ...*Parser) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
+		rs := make([]any, 0)
+		for _, p := range parsers {
+			r, err := p.parse(input)
+			if err != nil {
+				return ParseResult{}, err
+			}
+			rs = append(rs, r.Result)
+			input = r.Remain
+		}
+		return ParseResult{rs, input}, nil
+	}}
+}
+
+// Or 有序选择两个解析器
+func Or(lhs *Parser, rhs *Parser) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
+		r, err := lhs.parse(input)
 		if err == nil {
 			return r, nil
 		}
-		r, err = rhs.parse[0](input)
+		r, err = rhs.parse(input)
 		if err != nil {
 			return ParseResult{}, err
 		}
 		return r, nil
-	}}}
+	}}
 }
 
-func OneOf(p1 Parser, p2 Parser, parsers ...Parser) Parser {
+// OneOf 有序选择多个解析器
+func OneOf(p1 *Parser, p2 *Parser, parsers ...*Parser) *Parser {
 	p := Or(p1, p2)
 	for _, pp := range parsers {
 		p = Or(p, pp)
@@ -174,34 +186,37 @@ func OneOf(p1 Parser, p2 Parser, parsers ...Parser) Parser {
 	return p
 }
 
-func SkipFirst(p1 Parser, p2 Parser) Parser {
+// SkipFirst 连接两个解析器，并丢弃第一个解析器的结果
+func SkipFirst(p1 *Parser, p2 *Parser) *Parser {
 	return p1.And(p2).Map(func(p any) any {
 		return p.(Pair).Second
 	})
 }
 
-func SkipSecond(p1 Parser, p2 Parser) Parser {
+// SkipSecond 连接两个解析器，并丢弃第二个解析器的结果
+func SkipSecond(p1 *Parser, p2 *Parser) *Parser {
 	return p1.And(p2).Map(func(p any) any {
 		return p.(Pair).First
 	})
 }
 
 type SkipWrapper struct {
-	lhs Parser
-	And func(Parser) Parser
+	lhs *Parser
+	And func(*Parser) *Parser
 }
 
-func Skip(lhs Parser) SkipWrapper {
-	return SkipWrapper{lhs, func(rhs Parser) Parser {
+func Skip(lhs *Parser) SkipWrapper {
+	return SkipWrapper{lhs, func(rhs *Parser) *Parser {
 		return SkipFirst(lhs, rhs)
 	}}
 }
 
-func Many(p Parser) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
+// Many 应用指定解析器零次或多次
+func Many(p *Parser) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
 		rs := make([]any, 0)
 		for {
-			r, err := p.parse[0](input)
+			r, err := p.parse(input)
 			if err != nil {
 				break
 			}
@@ -209,10 +224,11 @@ func Many(p Parser) Parser {
 			input = r.Remain
 		}
 		return ParseResult{rs, input}, nil
-	}}}
+	}}
 }
 
-func Many1(p Parser) Parser {
+// Many1 应用指定解析器一次或多次
+func Many1(p *Parser) *Parser {
 	return p.And(p.Many()).Map(func(p any) any {
 		pair := p.(Pair)
 		rs := make([]any, 0)
@@ -222,33 +238,30 @@ func Many1(p Parser) Parser {
 	})
 }
 
-func Optional(p Parser, defaultValue any) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
-		r, err := p.parse[0](input)
+// Optional 尝试应用解析器，并在失败时返回默认值
+func Optional(p *Parser, defaultValue any) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
+		r, err := p.parse(input)
 		if err != nil {
 			return ParseResult{defaultValue, input}, nil
 		}
 		return r, nil
-	}}}
+	}}
 }
 
-func Lazy(factory func() Parser) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
-		return factory().parse[0](input)
-	}}}
-}
-
-func Peek(probe Parser, success Parser, failed Parser) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
-		_, err := probe.parse[0](input)
+// Peek 根据probe的执行成功与否，选择执行success或failed
+func Peek(probe *Parser, success *Parser, failed *Parser) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
+		_, err := probe.parse(input)
 		if err != nil {
-			return failed.parse[0](input)
+			return failed.parse(input)
 		}
-		return success.parse[0](input)
-	}}}
+		return success.parse(input)
+	}}
 }
 
-func SeparateBy(delimiter Parser, p Parser) Parser {
+// SeparateBy 匹配被给定分隔符分隔的输入
+func SeparateBy(delimiter *Parser, p *Parser) *Parser {
 	return p.And(Skip(delimiter).And(p).Many()).Map(func(p any) any {
 		var result []any
 		result = append(result, p.(Pair).First)
@@ -259,74 +272,88 @@ func SeparateBy(delimiter Parser, p Parser) Parser {
 	})
 }
 
-func Fatal(p Parser) Parser {
-	return Parser{ParseFunc{func(input Input) (ParseResult, error) {
-		r, e := p.parse[0](input)
+// Fatal 指定解析器解析失败时，抛出关键错误
+func Fatal(p *Parser) *Parser {
+	return &Parser{func(input Input) (ParseResult, error) {
+		r, e := p.parse(input)
 		if e != nil {
 			panic(e)
 		}
 		return r, nil
-	}}}
+	}}
 }
 
-func NewParser() Parser {
-	return Parser{ParseFunc{nil}}
+// NewParser 创建空解析器，该解析器随后通过Set方法设置
+func NewParser() *Parser {
+	return &Parser{nil}
 }
 
+// ParseToEnd 解析输入直到末尾
 func (p Parser) ParseToEnd(s string) (any, error) {
-	r, err := p.parse[0](CreateInput(s))
+	r, err := p.parse(CreateInput(s))
 	if err != nil {
 		return nil, err
 	}
 	remain := r.Remain
 	if !remain.End() {
-		return nil, errors.New(fmt.Sprintf("at row %d, col %d: end of file not reached", remain.Row(), remain.Col()))
+		return nil, parseError(remain, "end of input not reached")
 	}
 	return r.Result, nil
 }
 
-func (p Parser) Set(parser Parser) {
-	p.parse[0] = parser.parse[0]
+// Set 设置解析器
+func (p *Parser) Set(parser *Parser) {
+	p.parse = parser.parse
 }
 
-func (p Parser) And(rhs Parser) Parser {
+// And 连接另一个解析器
+func (p *Parser) And(rhs *Parser) *Parser {
 	return And(p, rhs)
 }
 
-func (p Parser) Or(rhs Parser) Parser {
+// Or 有序选择另一个解析器
+func (p *Parser) Or(rhs *Parser) *Parser {
 	return Or(p, rhs)
 }
 
-func (p Parser) Many() Parser {
+// Many 应用当前解析器零次或多次
+func (p *Parser) Many() *Parser {
 	return Many(p)
 }
 
-func (p Parser) Many1() Parser {
+// Many1 应用当前解析器一次或多次
+func (p *Parser) Many1() *Parser {
 	return Many1(p)
 }
 
-func (p Parser) Map(mapper func(any) any) Parser {
+// Map 转换当前解析器的解析结果
+func (p *Parser) Map(mapper func(any) any) *Parser {
 	return Map(p, mapper)
 }
 
-func (p Parser) Skip(rhs Parser) Parser {
+// Skip 连接另一个解析器并丢弃解析结果
+func (p *Parser) Skip(rhs *Parser) *Parser {
 	return SkipSecond(p, rhs)
 }
 
-func (p Parser) SurroundBy(parser Parser) Parser {
+// SurroundBy 在当前解析器周围应用另一个解析器
+func (p *Parser) SurroundBy(parser *Parser) *Parser {
 	return Seq(parser, p, parser).Map(func(rs any) any {
 		return rs.([]any)[1]
 	})
 }
 
-func (p Parser) ManyUntil(until Parser) Parser {
+// ManyUntil 应用当前解析器零次或多次，直到指定解析器执行成功
+func (p *Parser) ManyUntil(until *Parser) *Parser {
 	return Peek(until, Fail(), p).Many()
 }
 
-func (p Parser) Optional(defaultValue any) Parser {
+// Optional 将当前解析器变为可选，并提供默认解析结果
+func (p *Parser) Optional(defaultValue any) *Parser {
 	return Optional(p, defaultValue)
 }
 
-func (p Parser) Fatal() Parser {
+// Fatal 当前解析器失败时，抛出关键错误
+func (p *Parser) Fatal() *Parser {
 	return Fatal(p)
 }
