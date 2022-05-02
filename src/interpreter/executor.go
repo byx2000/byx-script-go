@@ -183,7 +183,7 @@ func execAssign(node Assign, scope Scope) {
 	case FieldAccess:
 		e := evaluate(lhs.(FieldAccess).Expr, scope)
 		if e.IsObject() {
-			fields := e.GetObject()
+			fields := e.GetFields()
 			name := lhs.(FieldAccess).Name
 			fields[name] = evaluate(rhs, scope)
 			return

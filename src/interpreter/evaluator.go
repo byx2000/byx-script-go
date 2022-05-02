@@ -135,7 +135,7 @@ func evalFieldAccess(node FieldAccess, scope Scope) Value {
 	} else if v.IsList() {
 		return evalListField(v.GetList(), name)
 	} else if v.IsObject() {
-		return evalObjectField(v.GetObject(), name)
+		return evalObjectField(v.GetFields(), name)
 	}
 	return UndefinedValue()
 }

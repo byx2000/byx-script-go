@@ -2,6 +2,7 @@ package common
 
 import "fmt"
 
+// Pair 长度为2的元组
 type Pair struct {
 	First  any
 	Second any

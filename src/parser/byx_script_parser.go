@@ -240,7 +240,7 @@ var (
 	})
 
 	idList = SeparateBy(comma, identifier).Optional([]any{}).Map(func(r any) any {
-		ids := []string{}
+		var ids []string
 		for _, id := range r.([]any) {
 			ids = append(ids, id.(string))
 		}
@@ -440,11 +440,11 @@ var (
 
 	// 程序
 	program = imports.And(stmts).Map(func(p any) any {
-		strs := []string{}
+		var imports []string
 		for _, s := range p.(Pair).First.([]any) {
-			strs = append(strs, s.(string))
+			imports = append(imports, s.(string))
 		}
-		return Program{strs, p.(Pair).Second.([]any)}
+		return Program{imports, p.(Pair).Second.([]any)}
 	})
 )
 
@@ -487,7 +487,7 @@ func init() {
 	stmts.Set(stmt.Skip(semi.Optional(nil)).Many())
 }
 
-// ParseScript 解析脚本，生成抽象语法树
+// ParseScript 解析ByxScript脚本，返回抽象语法树（Program节点）
 func ParseScript(script string) Program {
 	p, err := program.ParseToEnd(script)
 	if err != nil {

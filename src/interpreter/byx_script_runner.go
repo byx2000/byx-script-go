@@ -12,6 +12,7 @@ type RunConfig struct {
 	ImportPaths []string
 }
 
+// RunScript 执行ByxScript脚本
 func RunScript(script string, config RunConfig) {
 	scope := NewEmptyScope()
 

@@ -10,6 +10,8 @@ import (
 	"unicode/utf8"
 )
 
+// ByxScript内建函数
+
 func printValue(v Value, deep bool) {
 	if v.IsInteger() || v.IsDouble() || v.IsBool() || v.IsString() {
 		fmt.Print(v.GetData())
@@ -31,7 +33,7 @@ func printValue(v Value, deep bool) {
 		if deep {
 			fmt.Print("{")
 			i := 0
-			fields := v.GetObject()
+			fields := v.GetFields()
 			for k, v := range fields {
 				fmt.Print(k + ": ")
 				printValue(v, false)

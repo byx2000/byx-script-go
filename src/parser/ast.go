@@ -2,6 +2,8 @@ package parser
 
 import . "byx-script-go/src/common"
 
+// 抽象语法树节点定义
+
 // 表达式
 
 // Literal 字面量（整数、浮点数、布尔值）
@@ -131,6 +133,7 @@ type Try struct {
 	FinallyBranch any
 }
 
+// Program 程序节点
 type Program struct {
 	Imports []string
 	Stmts   []any

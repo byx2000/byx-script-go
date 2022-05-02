@@ -36,10 +36,12 @@ func (p Input) Current() rune {
 	return []rune(p.str)[p.index]
 }
 
+// Row 获取当前行号
 func (p Input) Row() int {
 	return p.row
 }
 
+// Col 获取当前列号
 func (p Input) Col() int {
 	return p.col
 }
