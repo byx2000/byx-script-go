@@ -1455,3 +1455,44 @@ func TestTry(t *testing.T) {
 	`, `
 	finally`)
 }
+
+func TestOpOverload(t *testing.T) {
+	verify(t, `
+	function Vector2(x, y) {
+		return {
+			x, y,
+			_add(v) {
+				return Vector2(x + v.x, y + v.y)
+			},
+			_sub(v) {
+				return Vector2(x - v.x, y - v.y)
+			},
+			_mul(v) {
+				return x * v.x + y * v.y
+			},
+			_div(a) {
+				return Vector2(x / a, y / a)
+			}
+		}
+	}
+	
+	var v1 = Vector2(3, 5)
+	var v2 = Vector2(4, -7)
+	
+	var v3 = v1 + v2
+	println(v3.x, v3.y)
+
+	var v4 = v1 - v2
+	println(v4.x, v4.y)
+
+	var v5 = v1 * v2
+	println(v5)
+
+	var v6 = v1 / 2.0
+	println(v6.x, v6.y)
+	`, `
+	7 -2
+	-1 12
+	-23
+	1.5 2.5`)
+}

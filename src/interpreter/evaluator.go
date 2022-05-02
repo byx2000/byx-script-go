@@ -152,6 +152,10 @@ func evalCall(node Call, scope Scope) Value {
 	panic(fmt.Sprintf("%v is not callable", callee))
 }
 
+func cannotApplyBinaryOp(op string, v1 Value, v2 Value) Value {
+	panic(fmt.Sprintf("operator %s cannot apply between %s and %s", op, v1.GetTypeId(), v2.GetTypeId()))
+}
+
 func evalAdd(lhs any, rhs any, scope Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
@@ -168,9 +172,14 @@ func evalAdd(lhs any, rhs any, scope Scope) Value {
 		return DoubleValue(v1.GetDouble() + float64(v2.GetInteger()))
 	} else if v1.IsDouble() && v2.IsDouble() {
 		return DoubleValue(v1.GetDouble() + v2.GetDouble())
-	} else {
-		panic(fmt.Sprintf("operator + cannot apply between %s and %s", v1.String(), v2.String()))
+	} else if v1.IsObject() {
+		fields := v1.GetFields()
+		if v, exist := fields["_add"]; exist && v.IsCallable() {
+			return v.GetCallable()([]Value{v2})
+		}
 	}
+
+	return cannotApplyBinaryOp("+", v1, v2)
 }
 
 func evalSub(lhs any, rhs any, scope Scope) Value {
@@ -185,9 +194,14 @@ func evalSub(lhs any, rhs any, scope Scope) Value {
 		return DoubleValue(v1.GetDouble() - float64(v2.GetInteger()))
 	} else if v1.IsDouble() && v2.IsDouble() {
 		return DoubleValue(v1.GetDouble() - v2.GetDouble())
-	} else {
-		panic(fmt.Sprintf("operator - cannot apply between %s and %s", v1.String(), v2.String()))
+	} else if v1.IsObject() {
+		fields := v1.GetFields()
+		if v, exist := fields["_sub"]; exist && v.IsCallable() {
+			return v.GetCallable()([]Value{v2})
+		}
 	}
+
+	return cannotApplyBinaryOp("-", v1, v2)
 }
 
 func evalMul(lhs any, rhs any, scope Scope) Value {
@@ -202,9 +216,14 @@ func evalMul(lhs any, rhs any, scope Scope) Value {
 		return DoubleValue(v1.GetDouble() * float64(v2.GetInteger()))
 	} else if v1.IsDouble() && v2.IsDouble() {
 		return DoubleValue(v1.GetDouble() * v2.GetDouble())
-	} else {
-		panic(fmt.Sprintf("operator * cannot apply between %s and %s", v1.String(), v2.String()))
+	} else if v1.IsObject() {
+		fields := v1.GetFields()
+		if v, exist := fields["_mul"]; exist && v.IsCallable() {
+			return v.GetCallable()([]Value{v2})
+		}
 	}
+
+	return cannotApplyBinaryOp("*", v1, v2)
 }
 
 func evalDiv(lhs any, rhs any, scope Scope) Value {
@@ -219,9 +238,14 @@ func evalDiv(lhs any, rhs any, scope Scope) Value {
 		return DoubleValue(v1.GetDouble() / float64(v2.GetInteger()))
 	} else if v1.IsDouble() && v2.IsDouble() {
 		return DoubleValue(v1.GetDouble() / v2.GetDouble())
-	} else {
-		panic(fmt.Sprintf("operator / cannot apply between %s and %s", v1.String(), v2.String()))
+	} else if v1.IsObject() {
+		fields := v1.GetFields()
+		if v, exist := fields["_div"]; exist && v.IsCallable() {
+			return v.GetCallable()([]Value{v2})
+		}
 	}
+
+	return cannotApplyBinaryOp("/", v1, v2)
 }
 
 func evalRem(lhs any, rhs any, scope Scope) Value {
@@ -230,9 +254,9 @@ func evalRem(lhs any, rhs any, scope Scope) Value {
 
 	if v1.IsInteger() && v2.IsInteger() {
 		return IntegerValue(v1.GetInteger() % v2.GetInteger())
-	} else {
-		panic(fmt.Sprintf("operator %% cannot apply between %s and %s", v1.String(), v2.String()))
 	}
+
+	return cannotApplyBinaryOp("%", v1, v2)
 }
 
 func evalLessThan(lhs any, rhs any, scope Scope) Value {
@@ -249,9 +273,9 @@ func evalLessThan(lhs any, rhs any, scope Scope) Value {
 		return BoolValue(v1.GetDouble() < float64(v2.GetInteger()))
 	} else if v1.IsDouble() && v2.IsDouble() {
 		return BoolValue(v1.GetDouble() < v2.GetDouble())
-	} else {
-		panic(fmt.Sprintf("operator < cannot apply between %s and %s", v1.String(), v2.String()))
 	}
+
+	return cannotApplyBinaryOp("<", v1, v2)
 }
 
 func evalLessEqualThan(lhs any, rhs any, scope Scope) Value {
@@ -268,9 +292,9 @@ func evalLessEqualThan(lhs any, rhs any, scope Scope) Value {
 		return BoolValue(v1.GetDouble() <= float64(v2.GetInteger()))
 	} else if v1.IsDouble() && v2.IsDouble() {
 		return BoolValue(v1.GetDouble() <= v2.GetDouble())
-	} else {
-		panic(fmt.Sprintf("operator <= cannot apply between %s and %s", v1.String(), v2.String()))
 	}
+
+	return cannotApplyBinaryOp("<=", v1, v2)
 }
 
 func evalGreaterThan(lhs any, rhs any, scope Scope) Value {
@@ -287,9 +311,9 @@ func evalGreaterThan(lhs any, rhs any, scope Scope) Value {
 		return BoolValue(v1.GetDouble() > float64(v2.GetInteger()))
 	} else if v1.IsDouble() && v2.IsDouble() {
 		return BoolValue(v1.GetDouble() > v2.GetDouble())
-	} else {
-		panic(fmt.Sprintf("operator > cannot apply between %s and %s", v1.String(), v2.String()))
 	}
+
+	return cannotApplyBinaryOp(">", v1, v2)
 }
 
 func evalGreaterEqualThan(lhs any, rhs any, scope Scope) Value {
@@ -306,9 +330,9 @@ func evalGreaterEqualThan(lhs any, rhs any, scope Scope) Value {
 		return BoolValue(v1.GetDouble() >= float64(v2.GetInteger()))
 	} else if v1.IsDouble() && v2.IsDouble() {
 		return BoolValue(v1.GetDouble() >= v2.GetDouble())
-	} else {
-		panic(fmt.Sprintf("operator >= cannot apply between %s and %s", v1.String(), v2.String()))
 	}
+
+	return cannotApplyBinaryOp(">=", v1, v2)
 }
 
 func evalEqual(lhs any, rhs any, scope Scope) Value {
@@ -337,7 +361,7 @@ func evalAnd(lhs any, rhs any, scope Scope) Value {
 		return BoolValue(v2.GetBool())
 	}
 
-	panic(fmt.Sprintf("operator && cannot apply between %s and %s", v1.String(), v2.String()))
+	return cannotApplyBinaryOp("&&", v1, v2)
 }
 
 func evalOr(lhs any, rhs any, scope Scope) Value {
@@ -350,7 +374,7 @@ func evalOr(lhs any, rhs any, scope Scope) Value {
 		return BoolValue(v2.GetBool())
 	}
 
-	panic(fmt.Sprintf("operator || cannot apply between %s and %s", v1.String(), v2.String()))
+	return cannotApplyBinaryOp("||", v1, v2)
 }
 
 func evalBinaryExpr(node BinaryExpr, scope Scope) Value {

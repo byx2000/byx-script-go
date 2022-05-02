@@ -79,6 +79,30 @@ func (v Value) GetType() int {
 	return v.t
 }
 
+// GetTypeId 获取类型id
+func (v Value) GetTypeId() string {
+	switch v.t {
+	case typeInteger:
+		return "integer"
+	case typeDouble:
+		return "double"
+	case typeBool:
+		return "bool"
+	case typeString:
+		return "string"
+	case typeList:
+		return "list"
+	case typeCallable:
+		return "callable"
+	case typeObject:
+		return "object"
+	case typeUndefined:
+		return "undefined"
+	default:
+		return "unknown"
+	}
+}
+
 // GetData 获取值底层数据
 func (v Value) GetData() any {
 	return v.data
