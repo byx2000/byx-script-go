@@ -1,7 +1,7 @@
 package interpreter
 
 import (
-	. "byx-script-go/src/common"
+	. "byx-script-go/common"
 	"container/list"
 	"fmt"
 	"hash/adler32"

@@ -1,3 +1,5 @@
+# ByxScript
+
 ByxScript是一门类似JavaScript的函数式动态类型编程语言，具有以下特点：
 
 * 支持整数、浮点数、布尔值、字符串、列表、函数、对象、`undefined`八种基本数据类型

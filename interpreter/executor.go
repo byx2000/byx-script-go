@@ -1,8 +1,8 @@
 package interpreter
 
 import (
-	. "byx-script-go/src/common"
-	. "byx-script-go/src/parser"
+	. "byx-script-go/common"
+	. "byx-script-go/parser"
 	"container/list"
 	"fmt"
 )

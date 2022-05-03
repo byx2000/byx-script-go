@@ -1,8 +1,8 @@
 package main
 
 import (
-	. "byx-script-go/src/common"
-	. "byx-script-go/src/interpreter"
+	. "byx-script-go/common"
+	. "byx-script-go/interpreter"
 	"flag"
 	"fmt"
 )

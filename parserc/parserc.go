@@ -1,7 +1,7 @@
 package parser
 
 import (
-	. "byx-script-go/src/common"
+	. "byx-script-go/common"
 	"errors"
 	"fmt"
 )
@@ -11,6 +11,8 @@ type ParseResult struct {
 	Result any   // 结果
 	Remain Input // 剩余输入
 }
+
+var emptyParseResult = ParseResult{}
 
 // ParseFunc 解析函数
 type ParseFunc func(Input) (ParseResult, error)
@@ -25,9 +27,9 @@ func parseError(input Input, msg string) error {
 }
 
 // Fail 直接失败
-func Fail() *Parser {
+func Fail(msg string) *Parser {
 	return &Parser{func(input Input) (ParseResult, error) {
-		return ParseResult{}, parseError(input, "no error message")
+		return emptyParseResult, parseError(input, msg)
 	}}
 }
 
@@ -35,7 +37,7 @@ func Fail() *Parser {
 func Any() *Parser {
 	return &Parser{func(input Input) (ParseResult, error) {
 		if input.End() {
-			return ParseResult{}, parseError(input, "unexpected end of input")
+			return emptyParseResult, parseError(input, "unexpected end of input")
 		}
 		c := input.Current()
 		return ParseResult{c, input.Next()}, nil
@@ -46,11 +48,11 @@ func Any() *Parser {
 func Ch(c rune) *Parser {
 	return &Parser{func(input Input) (ParseResult, error) {
 		if input.End() {
-			return ParseResult{}, parseError(input, "unexpected end of input")
+			return emptyParseResult, parseError(input, "unexpected end of input")
 		}
 		ch := input.Current()
 		if c != ch {
-			return ParseResult{}, parseError(input, fmt.Sprintf("expected %c", c))
+			return emptyParseResult, parseError(input, fmt.Sprintf("expected %c", c))
 		}
 		return ParseResult{c, input.Next()}, nil
 	}}
@@ -64,12 +66,12 @@ func Chs(chs ...rune) *Parser {
 	}
 	return &Parser{func(input Input) (ParseResult, error) {
 		if input.End() {
-			return ParseResult{}, parseError(input, "unexpected end of input")
+			return emptyParseResult, parseError(input, "unexpected end of input")
 		}
 		c := input.Current()
 		_, exist := set[c]
 		if !exist {
-			return ParseResult{}, parseError(input, fmt.Sprintf("unexpected %c", c))
+			return emptyParseResult, parseError(input, fmt.Sprintf("unexpected %c", c))
 		}
 		return ParseResult{c, input.Next()}, nil
 	}}
@@ -79,11 +81,11 @@ func Chs(chs ...rune) *Parser {
 func Not(c rune) *Parser {
 	return &Parser{func(input Input) (ParseResult, error) {
 		if input.End() {
-			return ParseResult{}, parseError(input, "unexpected end of input")
+			return emptyParseResult, parseError(input, "unexpected end of input")
 		}
 		ch := input.Current()
 		if c == ch {
-			return ParseResult{}, parseError(input, fmt.Sprintf("unexpected %c", ch))
+			return emptyParseResult, parseError(input, fmt.Sprintf("unexpected %c", ch))
 		}
 		return ParseResult{ch, input.Next()}, nil
 	}}
@@ -93,26 +95,23 @@ func Not(c rune) *Parser {
 func Range(c1 rune, c2 rune) *Parser {
 	return &Parser{func(input Input) (ParseResult, error) {
 		if input.End() {
-			return ParseResult{}, parseError(input, "unexpected end of input")
+			return emptyParseResult, parseError(input, "unexpected end of input")
 		}
 		c := input.Current()
 		if (c-c1)*(c-c2) > 0 {
-			return ParseResult{}, parseError(input, fmt.Sprintf("unexpected %c", c))
+			return emptyParseResult, parseError(input, fmt.Sprintf("unexpected %c", c))
 		}
 		return ParseResult{c, input.Next()}, nil
 	}}
 }
 
-// String 匹配字符串前缀
-func String(s string) *Parser {
+// Str 匹配字符串前缀
+func Str(s string) *Parser {
 	return &Parser{func(input Input) (ParseResult, error) {
 		i := input
 		for _, c := range s {
-			if i.End() {
-				return ParseResult{}, parseError(input, "unexpected end of input")
-			}
-			if i.Current() != c {
-				return ParseResult{}, parseError(input, fmt.Sprintf("expected %s", s))
+			if i.End() || i.Current() != c {
+				return emptyParseResult, parseError(input, fmt.Sprintf("expected %s", s))
 			}
 			i = i.Next()
 		}
@@ -125,7 +124,7 @@ func Map(p *Parser, mapper func(any) any) *Parser {
 	return &Parser{func(input Input) (ParseResult, error) {
 		r, err := p.parse(input)
 		if err != nil {
-			return ParseResult{}, err
+			return emptyParseResult, err
 		}
 		return ParseResult{mapper(r.Result), r.Remain}, nil
 	}}
@@ -136,11 +135,11 @@ func And(lhs *Parser, rhs *Parser) *Parser {
 	return &Parser{func(input Input) (ParseResult, error) {
 		r1, err := lhs.parse(input)
 		if err != nil {
-			return ParseResult{}, err
+			return emptyParseResult, err
 		}
 		r2, err := rhs.parse(r1.Remain)
 		if err != nil {
-			return ParseResult{}, err
+			return emptyParseResult, err
 		}
 		return ParseResult{Pair{r1.Result, r2.Result}, r2.Remain}, nil
 	}}
@@ -153,7 +152,7 @@ func Seq(parsers ...*Parser) *Parser {
 		for _, p := range parsers {
 			r, err := p.parse(input)
 			if err != nil {
-				return ParseResult{}, err
+				return emptyParseResult, err
 			}
 			rs = append(rs, r.Result)
 			input = r.Remain
@@ -171,7 +170,7 @@ func Or(lhs *Parser, rhs *Parser) *Parser {
 		}
 		r, err = rhs.parse(input)
 		if err != nil {
-			return ParseResult{}, err
+			return emptyParseResult, err
 		}
 		return r, nil
 	}}
@@ -260,8 +259,8 @@ func Peek(probe *Parser, success *Parser, failed *Parser) *Parser {
 	}}
 }
 
-// SeparateBy 匹配被给定分隔符分隔的输入
-func SeparateBy(delimiter *Parser, p *Parser) *Parser {
+// SeparatedBy 匹配被给定分隔符分隔的输入
+func SeparatedBy(delimiter *Parser, p *Parser) *Parser {
 	return p.And(Skip(delimiter).And(p).Many()).Map(func(p any) any {
 		var result []any
 		result = append(result, p.(Pair).First)
@@ -336,8 +335,8 @@ func (p *Parser) Skip(rhs *Parser) *Parser {
 	return SkipSecond(p, rhs)
 }
 
-// SurroundBy 在当前解析器周围应用另一个解析器
-func (p *Parser) SurroundBy(parser *Parser) *Parser {
+// SurroundedBy 在当前解析器周围应用另一个解析器
+func (p *Parser) SurroundedBy(parser *Parser) *Parser {
 	return Seq(parser, p, parser).Map(func(rs any) any {
 		return rs.([]any)[1]
 	})
@@ -345,7 +344,7 @@ func (p *Parser) SurroundBy(parser *Parser) *Parser {
 
 // ManyUntil 应用当前解析器零次或多次，直到指定解析器执行成功
 func (p *Parser) ManyUntil(until *Parser) *Parser {
-	return Peek(until, Fail(), p).Many()
+	return Peek(until, Fail("no error message"), p).Many()
 }
 
 // Optional 将当前解析器变为可选，并提供默认解析结果

@@ -1,8 +1,8 @@
 package parser
 
 import (
-	. "byx-script-go/src/common"
-	. "byx-script-go/src/parserc"
+	. "byx-script-go/common"
+	. "byx-script-go/parserc"
 	"fmt"
 	"strconv"
 )
@@ -101,10 +101,10 @@ var (
 	whitespace = Chs(' ', '\t', '\n', '\r')
 
 	// 行注释
-	lineComment = Seq(String("//"), Not('\n').Many(), Ch('\n'))
+	lineComment = Seq(Str("//"), Not('\n').Many(), Ch('\n'))
 
 	// 块注释
-	blockComment = Seq(String("/*"), Any().ManyUntil(String("*/")), String("*/"))
+	blockComment = Seq(Str("/*"), Any().ManyUntil(Str("*/")), Str("*/"))
 
 	// 可忽略元素
 	ignorable = OneOf(whitespace, lineComment, blockComment).Many()
@@ -120,74 +120,74 @@ var (
 	underline = Ch('_')
 
 	// 整数
-	integer = digits.SurroundBy(ignorable)
+	integer = digits.SurroundedBy(ignorable)
 
 	// 浮点数
-	decimal = Seq(digits, Ch('.'), digits).Map(join).SurroundBy(ignorable)
+	decimal = Seq(digits, Ch('.'), digits).Map(join).SurroundedBy(ignorable)
 
 	// 字符串
-	str = Skip(Ch('\'')).And(Not('\'').Many()).Skip(Ch('\'')).Map(join).SurroundBy(ignorable)
+	str = Skip(Ch('\'')).And(Not('\'').Many()).Skip(Ch('\'')).Map(join).SurroundedBy(ignorable)
 
 	// 布尔值
-	boolean = String("true").Or(String("false")).SurroundBy(ignorable)
+	boolean = Str("true").Or(Str("false")).SurroundedBy(ignorable)
 
 	// 符号
-	assign    = String("=").SurroundBy(ignorable)
-	semi      = String(";").SurroundBy(ignorable)
-	comma     = String(",").SurroundBy(ignorable)
-	colon     = String(":").SurroundBy(ignorable)
-	dot       = String(".").SurroundBy(ignorable)
-	lp        = String("(").SurroundBy(ignorable)
-	rp        = String(")").SurroundBy(ignorable)
-	lb        = String("{").SurroundBy(ignorable)
-	rb        = String("}").SurroundBy(ignorable)
-	ls        = String("[").SurroundBy(ignorable)
-	rs        = String("]").SurroundBy(ignorable)
-	add       = String("+").SurroundBy(ignorable)
-	sub       = String("-").SurroundBy(ignorable)
-	mul       = String("*").SurroundBy(ignorable)
-	div       = String("/").SurroundBy(ignorable)
-	rem       = String("%").SurroundBy(ignorable)
-	gt        = String(">").SurroundBy(ignorable)
-	get       = String(">=").SurroundBy(ignorable)
-	lt        = String("<").SurroundBy(ignorable)
-	let       = String("<=").SurroundBy(ignorable)
-	equ       = String("==").SurroundBy(ignorable)
-	neq       = String("!=").SurroundBy(ignorable)
-	and       = String("&&").SurroundBy(ignorable)
-	or        = String("||").SurroundBy(ignorable)
-	not       = String("!").SurroundBy(ignorable)
-	arrow     = String("=>").SurroundBy(ignorable)
-	inc       = String("++").SurroundBy(ignorable)
-	dec       = String("--").SurroundBy(ignorable)
-	addAssign = String("+=").SurroundBy(ignorable)
-	subAssign = String("-=").SurroundBy(ignorable)
-	mulAssign = String("*=").SurroundBy(ignorable)
-	divAssign = String("/=").SurroundBy(ignorable)
+	assign    = Str("=").SurroundedBy(ignorable)
+	semi      = Str(";").SurroundedBy(ignorable)
+	comma     = Str(",").SurroundedBy(ignorable)
+	colon     = Str(":").SurroundedBy(ignorable)
+	dot       = Str(".").SurroundedBy(ignorable)
+	lp        = Str("(").SurroundedBy(ignorable)
+	rp        = Str(")").SurroundedBy(ignorable)
+	lb        = Str("{").SurroundedBy(ignorable)
+	rb        = Str("}").SurroundedBy(ignorable)
+	ls        = Str("[").SurroundedBy(ignorable)
+	rs        = Str("]").SurroundedBy(ignorable)
+	add       = Str("+").SurroundedBy(ignorable)
+	sub       = Str("-").SurroundedBy(ignorable)
+	mul       = Str("*").SurroundedBy(ignorable)
+	div       = Str("/").SurroundedBy(ignorable)
+	rem       = Str("%").SurroundedBy(ignorable)
+	gt        = Str(">").SurroundedBy(ignorable)
+	get       = Str(">=").SurroundedBy(ignorable)
+	lt        = Str("<").SurroundedBy(ignorable)
+	let       = Str("<=").SurroundedBy(ignorable)
+	equ       = Str("==").SurroundedBy(ignorable)
+	neq       = Str("!=").SurroundedBy(ignorable)
+	and       = Str("&&").SurroundedBy(ignorable)
+	or        = Str("||").SurroundedBy(ignorable)
+	not       = Str("!").SurroundedBy(ignorable)
+	arrow     = Str("=>").SurroundedBy(ignorable)
+	inc       = Str("++").SurroundedBy(ignorable)
+	dec       = Str("--").SurroundedBy(ignorable)
+	addAssign = Str("+=").SurroundedBy(ignorable)
+	subAssign = Str("-=").SurroundedBy(ignorable)
+	mulAssign = Str("*=").SurroundedBy(ignorable)
+	divAssign = Str("/=").SurroundedBy(ignorable)
 	assignOp  = OneOf(assign, addAssign, subAssign, mulAssign, divAssign)
 
 	// 关键字
-	import_    = String("import").SurroundBy(ignorable)
-	var_       = String("var").SurroundBy(ignorable)
-	if_        = String("if").SurroundBy(ignorable)
-	else_      = String("else").SurroundBy(ignorable)
-	for_       = String("for").SurroundBy(ignorable)
-	while_     = String("while").SurroundBy(ignorable)
-	break_     = String("break").SurroundBy(ignorable)
-	continue_  = String("continue").SurroundBy(ignorable)
-	return_    = String("return").SurroundBy(ignorable)
-	function_  = String("function").SurroundBy(ignorable)
-	undefined_ = String("undefined").SurroundBy(ignorable)
-	try_       = String("try").SurroundBy(ignorable)
-	catch_     = String("catch").SurroundBy(ignorable)
-	finally_   = String("finally").SurroundBy(ignorable)
-	throw_     = String("throw").SurroundBy(ignorable)
+	import_    = Str("import").SurroundedBy(ignorable)
+	var_       = Str("var").SurroundedBy(ignorable)
+	if_        = Str("if").SurroundedBy(ignorable)
+	else_      = Str("else").SurroundedBy(ignorable)
+	for_       = Str("for").SurroundedBy(ignorable)
+	while_     = Str("while").SurroundedBy(ignorable)
+	break_     = Str("break").SurroundedBy(ignorable)
+	continue_  = Str("continue").SurroundedBy(ignorable)
+	return_    = Str("return").SurroundedBy(ignorable)
+	function_  = Str("function").SurroundedBy(ignorable)
+	undefined_ = Str("undefined").SurroundedBy(ignorable)
+	try_       = Str("try").SurroundedBy(ignorable)
+	catch_     = Str("catch").SurroundedBy(ignorable)
+	finally_   = Str("finally").SurroundedBy(ignorable)
+	throw_     = Str("throw").SurroundedBy(ignorable)
 
 	// 标识符
 	identifier = Seq(OneOf(alpha, underline), OneOf(digit, alpha, underline).Many()).Map(func(r any) any {
 		rs := r.([]any)
 		return toString(rs[0]) + join(rs[1]).(string)
-	}).SurroundBy(ignorable)
+	}).SurroundedBy(ignorable)
 
 	// 整数字面量
 	integerLiteral = integer.Map(func(s any) any {
@@ -230,7 +230,7 @@ var (
 			return Pair{id, Var{id.(string)}}
 		}),
 	)
-	fieldList  = SeparateBy(comma, fieldPair).Optional([]any{})
+	fieldList  = SeparatedBy(comma, fieldPair).Optional([]any{})
 	objLiteral = Skip(lb).And(fieldList).Skip(rb.Fatal()).Map(func(pairs any) any {
 		fields := map[string]any{}
 		for _, p := range pairs.([]any) {
@@ -239,7 +239,7 @@ var (
 		return ObjectLiteral{fields}
 	})
 
-	idList = SeparateBy(comma, identifier).Optional([]any{}).Map(func(r any) any {
+	idList = SeparatedBy(comma, identifier).Optional([]any{}).Map(func(r any) any {
 		var ids []string
 		for _, id := range r.([]any) {
 			ids = append(ids, id.(string))
@@ -247,7 +247,7 @@ var (
 		return ids
 	})
 
-	exprList = SeparateBy(comma, expr).Optional([]any{})
+	exprList = SeparatedBy(comma, expr).Optional([]any{})
 
 	// 参数列表
 	singleParamList = identifier.Map(func(r any) any {
@@ -435,7 +435,7 @@ var (
 	stmt = NewParser()
 
 	// 导入声明
-	importName = OneOf(digit, alpha, underline, Ch('/')).Many1().SurroundBy(ignorable).Map(join)
+	importName = OneOf(digit, alpha, underline, Ch('/')).Many1().SurroundedBy(ignorable).Map(join)
 	imports    = Skip(import_).And(importName).Many()
 
 	// 程序

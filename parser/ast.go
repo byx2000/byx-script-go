@@ -1,6 +1,6 @@
 package parser
 
-import . "byx-script-go/src/common"
+import . "byx-script-go/common"
 
 // 抽象语法树节点定义
 

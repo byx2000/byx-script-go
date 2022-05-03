@@ -1,7 +1,7 @@
 package test
 
 import (
-	. "byx-script-go/src/interpreter"
+	. "byx-script-go/interpreter"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
