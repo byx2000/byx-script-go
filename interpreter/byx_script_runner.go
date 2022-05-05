@@ -63,7 +63,7 @@ func parseImportName(importName string, importPaths []string) Program {
 
 func parseImports(imports []string, importPaths []string) map[string]Program {
 	result := map[string]Program{}
-	namesToParse := []string{}
+	var namesToParse []string
 	namesToParse = append(namesToParse, imports...)
 	for {
 		cnt := len(namesToParse)
@@ -100,7 +100,7 @@ func getLoadOrder(imports map[string]Program) []string {
 	// 计算反向依赖关系
 	dependBy := map[string]map[string]bool{}
 	for k, v := range dependOn {
-		for n, _ := range v {
+		for n := range v {
 			set, exist := dependBy[n]
 			if !exist {
 				set = map[string]bool{}
@@ -124,21 +124,21 @@ func getLoadOrder(imports map[string]Program) []string {
 		}
 	}
 
-	order := []string{}
+	var order []string
 	for {
 		if len(ready) == 0 {
 			break
 		}
 
 		var n string
-		for k, _ := range ready {
+		for k := range ready {
 			n = k
 			break
 		}
 		delete(ready, n)
 		order = append(order, n)
 		if ns, exist := dependBy[n]; exist {
-			for n2, _ := range ns {
+			for n2 := range ns {
 				o := out[n2]
 				out[n2] = o - 1
 				if o == 1 {
@@ -159,6 +159,7 @@ func getLoadOrder(imports map[string]Program) []string {
 func addBuiltins(scope Scope) {
 	scope.DeclareVar("print", Print)
 	scope.DeclareVar("println", Println)
+	scope.DeclareVar("printf", Printf)
 
 	scope.DeclareVar("isInteger", IsInteger)
 	scope.DeclareVar("isDouble", IsDouble)

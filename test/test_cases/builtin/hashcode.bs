@@ -1,0 +1,7 @@
+var objs = [123, 3.14, true, 'hello', [1, 2, 3], {a: 100, b: 'hi'}, undefined]
+for (var i = 0; i < objs.length(); ++i) {
+    for (var j = 0; j < objs.length(); ++j) {
+        print((hashcode(objs[i]) == hashcode(objs[j])) + ' ')
+    }
+    println()
+}

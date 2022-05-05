@@ -1,0 +1,30 @@
+import set
+
+var set = Set()
+set.add(1)
+set.add(2)
+set.add(3)
+set.add(2)
+var list = set.toList()
+println(set.size())
+println(set.contains(1))
+println(set.contains(2))
+println(set.contains(3))
+println(set.contains(4))
+println(set.remove(1))
+println(set.remove(5))
+println(set.size())
+println(set.contains(1))
+println(set.contains(2))
+println(set.contains(3))
+println(set.contains(4))
+println(set.isEmpty())
+set.remove(2)
+set.remove(3)
+println(set.isEmpty())
+
+var s = Set()
+for (var i = 0; i < 100; ++i) {
+    s.add(i % 10)
+}
+println(s.size())

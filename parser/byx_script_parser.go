@@ -126,7 +126,9 @@ var (
 	decimal = Seq(digits, Ch('.'), digits).Map(join).SurroundedBy(ignorable)
 
 	// 字符串
-	str = Skip(Ch('\'')).And(Not('\'').Many()).Skip(Ch('\'')).Map(join).SurroundedBy(ignorable)
+	//str = Skip(Ch('\'')).And(Not('\'').Many()).Skip(Ch('\'')).Map(join).SurroundedBy(ignorable)
+	strElem = OneOf(Str("\\n").Return('\n'), Str("\\t").Return('\t'), Not('\''))
+	str     = Skip(Ch('\'')).And(strElem.Many()).Skip(Ch('\'')).Map(join).SurroundedBy(ignorable)
 
 	// 布尔值
 	boolean = Str("true").Or(Str("false")).SurroundedBy(ignorable)
@@ -407,14 +409,10 @@ var (
 	})
 
 	// break语句
-	breakStmt = break_.Map(func(_ any) any {
-		return Break{}
-	})
+	breakStmt = break_.Return(Break{})
 
 	// continue语句
-	continueStmt = continue_.Map(func(_ any) any {
-		return Continue{}
-	})
+	continueStmt = continue_.Return(Continue{})
 
 	// return语句
 	returnStmt = Skip(return_).And(expr.Optional(Literal{UndefinedValue()})).Map(func(e any) any {

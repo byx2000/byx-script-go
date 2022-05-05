@@ -73,6 +73,15 @@ var Println = CallableValue(func(args []Value) Value {
 	return UndefinedValue()
 })
 
+var Printf = CallableValue(func(args []Value) Value {
+	var a []any
+	for i := 1; i < len(args); i++ {
+		a = append(a, args[i].GetData())
+	}
+	fmt.Printf(args[0].GetString(), a...)
+	return UndefinedValue()
+})
+
 func StringLength(s string) Value {
 	return CallableValue(func(args []Value) Value {
 		return IntegerValue(utf8.RuneCountInString(s))

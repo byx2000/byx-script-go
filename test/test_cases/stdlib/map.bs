@@ -1,0 +1,36 @@
+import map
+
+var map = Map()
+map.put('k1', 123)
+map.put('k2', 456)
+map.put('k3', 789)
+println(map.size())
+println(map.get('k1'))
+println(map.get('k2'))
+println(map.get('k3'))
+println(map.get('k4'))
+println(map.containsKey('k1'))
+println(map.containsKey('k2'))
+println(map.containsKey('k3'))
+println(map.containsKey('k4'))
+println(map.put('k2', 12345))
+println(map.get('k2'))
+println(map.remove('k4'))
+println(map.remove('k1'))
+println(map.size())
+
+function twoSum(nums, target) {
+    var map = Map()
+    for (var i = 0; i < nums.length(); ++i) {
+        if (map.containsKey(target - nums[i])) {
+            return [map.get(target - nums[i]), i]
+        }
+        map.put(nums[i], i)
+    }
+    return undefined
+}
+
+println(twoSum([2, 7, 11, 15], 9))
+println(twoSum([3, 2, 4], 6))
+println(twoSum([3, 3], 6))
+println(twoSum([23, 16, 76, 97, 240, 224, 5, 78, 443, 25], 103))

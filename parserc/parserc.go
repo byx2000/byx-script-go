@@ -352,6 +352,13 @@ func (p *Parser) Optional(defaultValue any) *Parser {
 	return Optional(p, defaultValue)
 }
 
+// Return 当前解析器解析成功后，丢弃解析结果，并返回指定结果
+func (p *Parser) Return(result any) *Parser {
+	return p.Map(func(a any) any {
+		return result
+	})
+}
+
 // Fatal 当前解析器失败时，抛出关键错误
 func (p *Parser) Fatal() *Parser {
 	return Fatal(p)

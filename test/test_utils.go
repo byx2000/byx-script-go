@@ -1,11 +1,15 @@
 package test
 
 import (
+	. "byx-script-go/common"
 	. "byx-script-go/interpreter"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -51,4 +55,34 @@ func verify(t *testing.T, script string, expectedOutput string) {
 func importAndVerify(t *testing.T, importPaths []string, script string, expectedOutput string) {
 	output := importAndRunScript(importPaths, script)
 	assert.Equal(t, replaceBlank(expectedOutput), replaceBlank(output))
+}
+
+func readFile(filename string) string {
+	content, err := ReadFileAsString(filename)
+	if err != nil {
+		panic(err)
+	}
+	return content
+}
+
+func runTestCase(t *testing.T, caseDir string) {
+	importAndRunTestCase(t, []string{}, caseDir)
+}
+
+func importAndRunTestCase(t *testing.T, importPaths []string, caseDir string) {
+	fmt.Println("===================== caseDir " + caseDir + " =====================")
+	dir, err := ioutil.ReadDir(caseDir)
+	if err != nil {
+		panic(err)
+	}
+	for _, fi := range dir {
+		name := fi.Name()
+		if strings.HasSuffix(name, ".bs") {
+			caseName := replace(name, "\\.bs", "")
+			fmt.Println("case " + caseName + " running...")
+			script := readFile(filepath.Join(caseDir, caseName+".bs"))
+			expectedOutput := readFile(filepath.Join(caseDir, caseName+".out"))
+			importAndVerify(t, importPaths, script, expectedOutput)
+		}
+	}
 }

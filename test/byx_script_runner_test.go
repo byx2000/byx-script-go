@@ -1,9 +1,7 @@
 package test
 
 import (
-	. "byx-script-go/interpreter"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"strings"
 	"testing"
@@ -1337,26 +1335,6 @@ func TestCounter(t *testing.T) {
 	202
 	201
 	200`)
-}
-
-func TestImport(t *testing.T) {
-	importAndVerify(t, []string{"p1", "p2"}, `
-	import a
-	import b
-
-	println('main')`, `
-	d
-	c
-	b
-	a
-	main`)
-
-	assert.Panics(t, func() {
-		RunScript(`
-		import x
-                
-		println('main')`, RunConfig{ImportPaths: []string{"p3"}})
-	})
 }
 
 func TestTry(t *testing.T) {
