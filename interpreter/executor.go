@@ -28,7 +28,7 @@ const (
 )
 
 // 执行语句
-func execute(node any, scope Scope) {
+func execute(node any, scope *Scope) {
 	switch node.(type) {
 	// 变量声明
 	case VarDeclare:
@@ -79,7 +79,7 @@ func execute(node any, scope Scope) {
 	}
 }
 
-func execTry(node Try, scope Scope) {
+func execTry(node Try, scope *Scope) {
 	defer func() {
 		if e := recover(); e != nil {
 			if t, ok := e.(ThrowException); ok {
@@ -97,7 +97,7 @@ func execTry(node Try, scope Scope) {
 	execute(node.TryBranch, scope)
 }
 
-func execFor(node For, scope Scope) {
+func execFor(node For, scope *Scope) {
 	scope = NewScope(scope)
 	for execute(node.Init, scope); getCondition(evaluate(node.Cond, scope)); execute(node.Update, scope) {
 		r := doLoop(node.Body, scope)
@@ -107,7 +107,7 @@ func execFor(node For, scope Scope) {
 	}
 }
 
-func doLoop(body any, scope Scope) (ret int) {
+func doLoop(body any, scope *Scope) (ret int) {
 	defer func() {
 		if e := recover(); e != nil {
 			switch e.(type) {
@@ -132,7 +132,7 @@ func getCondition(cond Value) bool {
 	panic(fmt.Sprintf("condition of if, while, for statement must be bool value: %s", cond.String()))
 }
 
-func execWhile(node While, scope Scope) {
+func execWhile(node While, scope *Scope) {
 	for {
 		if !getCondition(evaluate(node.Cond, scope)) {
 			break
@@ -144,7 +144,7 @@ func execWhile(node While, scope Scope) {
 	}
 }
 
-func execIf(node If, scope Scope) {
+func execIf(node If, scope *Scope) {
 	for _, c := range node.Cases {
 		cond := evaluate(c.First, scope)
 		if getCondition(cond) {
@@ -155,7 +155,7 @@ func execIf(node If, scope Scope) {
 	execute(node.ElseBranch, scope)
 }
 
-func execBlock(node Block, scope Scope) {
+func execBlock(node Block, scope *Scope) {
 	newScope := NewScope(scope)
 	for _, s := range node.Stmts {
 		execute(s, newScope)
@@ -172,7 +172,7 @@ func setListIndex(lst *list.List, index int, v Value) {
 	}
 }
 
-func execAssign(node Assign, scope Scope) {
+func execAssign(node Assign, scope *Scope) {
 	lhs := node.Lhs
 	rhs := node.Rhs
 	switch lhs.(type) {
@@ -206,7 +206,7 @@ func execAssign(node Assign, scope Scope) {
 	}
 }
 
-func execVarDeclare(node VarDeclare, scope Scope) {
+func execVarDeclare(node VarDeclare, scope *Scope) {
 	varName := node.VarName
 	value := evaluate(node.Value, scope)
 	scope.DeclareVar(varName, value)

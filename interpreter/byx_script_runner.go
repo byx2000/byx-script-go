@@ -156,7 +156,7 @@ func getLoadOrder(imports map[string]Program) []string {
 	return order
 }
 
-func addBuiltins(scope Scope) {
+func addBuiltins(scope *Scope) {
 	scope.DeclareVar("print", Print)
 	scope.DeclareVar("println", Println)
 	scope.DeclareVar("printf", Printf)

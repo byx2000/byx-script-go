@@ -12,23 +12,23 @@ type Scope struct {
 }
 
 // NewEmptyScope 创建空的作用域
-func NewEmptyScope() Scope {
-	return Scope{
+func NewEmptyScope() *Scope {
+	return &Scope{
 		vars: map[string]Value{},
 		next: nil,
 	}
 }
 
 // NewScope 创建作用域
-func NewScope(next Scope) Scope {
-	return Scope{
+func NewScope(next *Scope) *Scope {
+	return &Scope{
 		vars: map[string]Value{},
-		next: &next,
+		next: next,
 	}
 }
 
 // DeclareVar 定义变量
-func (s Scope) DeclareVar(varName string, value Value) {
+func (s *Scope) DeclareVar(varName string, value Value) {
 	if _, exist := s.vars[varName]; exist {
 		panic(fmt.Sprintf("var already exist: %s", varName))
 	}
@@ -36,8 +36,8 @@ func (s Scope) DeclareVar(varName string, value Value) {
 }
 
 // SetVar 设置变量的值
-func (s Scope) SetVar(varName string, value Value) {
-	cur := &s
+func (s *Scope) SetVar(varName string, value Value) {
+	cur := s
 	for {
 		if cur == nil {
 			break
@@ -52,8 +52,8 @@ func (s Scope) SetVar(varName string, value Value) {
 }
 
 // GetVar 获取变量的值
-func (s Scope) GetVar(varName string) Value {
-	cur := &s
+func (s *Scope) GetVar(varName string) Value {
+	cur := s
 	for {
 		if cur == nil {
 			break

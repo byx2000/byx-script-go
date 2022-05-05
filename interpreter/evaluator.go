@@ -10,7 +10,7 @@ import (
 )
 
 // 表达式求值
-func evaluate(node any, scope Scope) Value {
+func evaluate(node any, scope *Scope) Value {
 	switch node.(type) {
 	// 字面量（整数、浮点数、字符串、布尔值）
 	case Literal:
@@ -58,7 +58,7 @@ func getListIndex(lst *list.List, index int) Value {
 	return UndefinedValue()
 }
 
-func evalSubscript(node Subscript, scope Scope) Value {
+func evalSubscript(node Subscript, scope *Scope) Value {
 	e := evaluate(node.Expr, scope)
 	sub := evaluate(node.Sub, scope)
 	if !sub.IsInteger() {
@@ -127,7 +127,7 @@ func evalStringField(s string, name string) Value {
 	}
 }
 
-func evalFieldAccess(node FieldAccess, scope Scope) Value {
+func evalFieldAccess(node FieldAccess, scope *Scope) Value {
 	v := evaluate(node.Expr, scope)
 	name := node.Name
 	if v.IsString() {
@@ -140,7 +140,7 @@ func evalFieldAccess(node FieldAccess, scope Scope) Value {
 	return UndefinedValue()
 }
 
-func evalCall(node Call, scope Scope) Value {
+func evalCall(node Call, scope *Scope) Value {
 	callee := evaluate(node.Callee, scope)
 	if callee.IsCallable() {
 		var args []Value
@@ -156,7 +156,7 @@ func cannotApplyBinaryOp(op string, v1 Value, v2 Value) Value {
 	panic(fmt.Sprintf("operator %s cannot apply between %s and %s", op, v1.GetTypeId(), v2.GetTypeId()))
 }
 
-func evalAdd(lhs any, rhs any, scope Scope) Value {
+func evalAdd(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -182,7 +182,7 @@ func evalAdd(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp("+", v1, v2)
 }
 
-func evalSub(lhs any, rhs any, scope Scope) Value {
+func evalSub(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -204,7 +204,7 @@ func evalSub(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp("-", v1, v2)
 }
 
-func evalMul(lhs any, rhs any, scope Scope) Value {
+func evalMul(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -226,7 +226,7 @@ func evalMul(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp("*", v1, v2)
 }
 
-func evalDiv(lhs any, rhs any, scope Scope) Value {
+func evalDiv(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -248,7 +248,7 @@ func evalDiv(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp("/", v1, v2)
 }
 
-func evalRem(lhs any, rhs any, scope Scope) Value {
+func evalRem(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -259,7 +259,7 @@ func evalRem(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp("%", v1, v2)
 }
 
-func evalLessThan(lhs any, rhs any, scope Scope) Value {
+func evalLessThan(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -278,7 +278,7 @@ func evalLessThan(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp("<", v1, v2)
 }
 
-func evalLessEqualThan(lhs any, rhs any, scope Scope) Value {
+func evalLessEqualThan(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -297,7 +297,7 @@ func evalLessEqualThan(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp("<=", v1, v2)
 }
 
-func evalGreaterThan(lhs any, rhs any, scope Scope) Value {
+func evalGreaterThan(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -316,7 +316,7 @@ func evalGreaterThan(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp(">", v1, v2)
 }
 
-func evalGreaterEqualThan(lhs any, rhs any, scope Scope) Value {
+func evalGreaterEqualThan(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -335,7 +335,7 @@ func evalGreaterEqualThan(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp(">=", v1, v2)
 }
 
-func evalEqual(lhs any, rhs any, scope Scope) Value {
+func evalEqual(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	v2 := evaluate(rhs, scope)
 
@@ -346,11 +346,11 @@ func evalEqual(lhs any, rhs any, scope Scope) Value {
 	}
 }
 
-func evalNotEqual(lhs any, rhs any, scope Scope) Value {
+func evalNotEqual(lhs any, rhs any, scope *Scope) Value {
 	return BoolValue(!evalEqual(lhs, rhs, scope).GetBool())
 }
 
-func evalAnd(lhs any, rhs any, scope Scope) Value {
+func evalAnd(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	if v1.IsBool() && !v1.GetBool() {
 		return BoolValue(false)
@@ -364,7 +364,7 @@ func evalAnd(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp("&&", v1, v2)
 }
 
-func evalOr(lhs any, rhs any, scope Scope) Value {
+func evalOr(lhs any, rhs any, scope *Scope) Value {
 	v1 := evaluate(lhs, scope)
 	if v1.IsBool() && v1.GetBool() {
 		return BoolValue(true)
@@ -377,7 +377,7 @@ func evalOr(lhs any, rhs any, scope Scope) Value {
 	return cannotApplyBinaryOp("||", v1, v2)
 }
 
-func evalBinaryExpr(node BinaryExpr, scope Scope) Value {
+func evalBinaryExpr(node BinaryExpr, scope *Scope) Value {
 	op := node.Op
 	lhs := node.Lhs
 	rhs := node.Rhs
@@ -413,7 +413,7 @@ func evalBinaryExpr(node BinaryExpr, scope Scope) Value {
 	}
 }
 
-func evalNot(e any, scope Scope) Value {
+func evalNot(e any, scope *Scope) Value {
 	v := evaluate(e, scope)
 	if v.IsBool() {
 		return BoolValue(!v.GetBool())
@@ -422,7 +422,7 @@ func evalNot(e any, scope Scope) Value {
 	}
 }
 
-func evalNeg(e any, scope Scope) Value {
+func evalNeg(e any, scope *Scope) Value {
 	v := evaluate(e, scope)
 	if v.IsInteger() {
 		return IntegerValue(-v.GetInteger())
@@ -433,7 +433,7 @@ func evalNeg(e any, scope Scope) Value {
 	}
 }
 
-func evalUnaryExpr(node UnaryExpr, scope Scope) Value {
+func evalUnaryExpr(node UnaryExpr, scope *Scope) Value {
 	op := node.Op
 	e := node.Expr
 	switch op {
@@ -446,7 +446,7 @@ func evalUnaryExpr(node UnaryExpr, scope Scope) Value {
 	}
 }
 
-func evalObjectLiteral(node ObjectLiteral, scope Scope) Value {
+func evalObjectLiteral(node ObjectLiteral, scope *Scope) Value {
 	fields := Fields{}
 	for k, v := range node.Fields {
 		fields[k] = evaluate(v, scope)
@@ -454,7 +454,7 @@ func evalObjectLiteral(node ObjectLiteral, scope Scope) Value {
 	return ObjectValue(fields)
 }
 
-func evalCallableLiteral(node CallableLiteral, scope Scope) Value {
+func evalCallableLiteral(node CallableLiteral, scope *Scope) Value {
 	return CallableValue(func(args []Value) (retVal Value) {
 		// 传递实参
 		newScope := NewScope(scope)
@@ -483,7 +483,7 @@ func evalCallableLiteral(node CallableLiteral, scope Scope) Value {
 	})
 }
 
-func evalListLiteral(node ListLiteral, scope Scope) Value {
+func evalListLiteral(node ListLiteral, scope *Scope) Value {
 	elems := list.New()
 	for _, n := range node.Elems {
 		elems.PushBack(evaluate(n, scope))
