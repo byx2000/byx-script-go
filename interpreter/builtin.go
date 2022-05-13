@@ -25,7 +25,7 @@ func printValue(v Value, deep bool) {
 					fmt.Print(", ")
 				}
 			}
-			fmt.Println("]")
+			fmt.Print("]")
 		} else {
 			fmt.Print("[...]")
 		}
