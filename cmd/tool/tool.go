@@ -18,6 +18,7 @@ func (p *ImportPaths) Set(path string) error {
 	return nil
 }
 
+// ByxScript命令行工具
 func main() {
 	defer func() {
 		if e := recover(); e != nil {
